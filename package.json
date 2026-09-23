@@ -1,0 +1,22 @@
+{
+  "name": "coa-project-sensecore",
+  "version": "1.0.0",
+  "description": "SENSECORE - Real-Time Embedded Computer Architecture Simulator",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_simulator.js",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "computer-architecture",
+    "simulator",
+    "embedded-systems",
+    "cpu",
+    "alu",
+    "microcontroller"
+  ],
+  "author": "Naresh-its",
+  "license": "MIT"
+}
