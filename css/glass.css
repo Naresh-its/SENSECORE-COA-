@@ -1,0 +1,86 @@
+/* Base Glass Effect */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-lg);
+  transition: background var(--transition-normal), border-color var(--transition-normal);
+  transform: translateZ(0); /* GPU layer isolation */
+}
+
+.glass-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+
+/* Glass Panel (Larger) */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-xl);
+  transform: translateZ(0);
+}
+
+/* Sidebar Glass */
+.glass-sidebar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
+  height: 100%;
+  transform: translateZ(0);
+}
+
+/* Topbar Glass */
+.glass-topbar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transform: translateZ(0);
+}
+
+/* Glass Card Variations */
+.glass-card--warning {
+  border-left: 3px solid var(--warning);
+  background: rgba(var(--warning-rgb), 0.05);
+}
+
+.glass-card--critical {
+  border-left: 3px solid var(--danger);
+  background: rgba(var(--danger-rgb), 0.05);
+  animation: pulse-danger 3s ease-in-out infinite;
+}
+
+.glass-card--active {
+  border-left: 3px solid var(--accent-cyan);
+  box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
+/* Inset Glass */
+.glass-inset {
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-card, .glass-panel, .glass-sidebar, .glass-topbar {
+    background: var(--bg-secondary);
+  }
+}

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENSECORE — Real-Time Embedded Computer Architecture Simulator</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/glass.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="app-layout">
+
+  <!-- ======================================================================
+       TOP BAR: System Monitor, Live Status & Simulation Controls
+       ====================================================================== -->
+  <header class="app-topbar glass-topbar">
+    <!-- Brand / System Title -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="12" fill="#12121a" stroke="rgba(255,255,255,0.15)"/>
+        <rect x="20" y="20" width="24" height="24" rx="4" fill="#00d4ff" fill-opacity="0.2" stroke="#00d4ff" stroke-width="2"/>
+        <rect x="26" y="26" width="12" height="12" rx="2" fill="#00d4ff"/>
+        <line x1="12" y1="32" x2="20" y2="32" stroke="#c0c0c0" stroke-width="2"/>
+        <line x1="44" y1="32" x2="52" y2="32" stroke="#c0c0c0" stroke-width="2"/>
+        <line x1="32" y1="12" x2="32" y2="20" stroke="#c0c0c0" stroke-width="2"/>
+        <line x1="32" y1="44" x2="32" y2="52" stroke="#c0c0c0" stroke-width="2"/>
+      </svg>
+      <div>
+        <div style="font-weight: 700; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--silver); line-height: 1.1;">
+          SENSECORE <span style="font-size: 0.65rem; color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 600; border: 1px solid rgba(0,212,255,0.3); padding: 1px 5px; border-radius: 4px; margin-left: 4px;">v2.4-LAB</span>
+        </div>
+        <div style="font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">
+          Embedded Architecture Simulator
+        </div>
+      </div>
+    </div>
+
+    <!-- Live System Status Monitor (Requirement 11) -->
+    <div class="sys-monitor">
+      <div class="sys-monitor-item">
+        <span class="sys-monitor-label">STATUS</span>
+        <span class="sys-monitor-value" id="topbar-status" style="display: flex; align-items: center;">
+          <span class="status-dot status-dot--online"></span>
+          <span id="topbar-status-text">ONLINE</span>
+        </span>
+      </div>
+      
+      <div class="sys-monitor-item">
+        <span class="sys-monitor-label">CPU CORE</span>
+        <span class="sys-monitor-value" id="topbar-cpu">IDLE</span>
+      </div>
+
+      <div class="sys-monitor-item">
+        <span class="sys-monitor-label">RAM USAGE</span>
+        <span class="sys-monitor-value" id="topbar-memory">24%</span>
+      </div>
+
+      <div class="sys-monitor-item">
+        <span class="sys-monitor-label">I/O BUS</span>
+        <span class="sys-monitor-value" id="topbar-io">STANDBY</span>
+      </div>
+
+      <div class="sys-monitor-item">
+        <span class="sys-monitor-label">NETWORK</span>
+        <span class="sys-monitor-value" id="topbar-net" style="color: var(--success);">CONNECTED</span>
+      </div>
+    </div>
+
+    <!-- Simulation Controls & Live Badge (Requirements 7, 8, 9) -->
+    <div class="sim-controls">
+      <span class="badge badge-info live-badge" id="live-indicator" style="display: none;">
+        ● LIVE SIMULATION
+      </span>
+      <button id="btn-sim-toggle" class="btn btn-primary" title="Toggle simulation running state">
+        <span id="btn-sim-toggle-icon">▶</span>
+        <span id="btn-sim-toggle-text">START SIMULATION</span>
+      </button>
+      <button id="btn-sim-reset" class="btn btn-danger btn-sm" title="Restore system to default state">
+        ↺ RESET
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       SIDEBAR: View Navigation (Requirement 14)
+       ====================================================================== -->
+  <aside class="app-sidebar glass-sidebar">
+    <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 12px; margin-top: 4px;">
+      Architecture Views
+    </div>
+
+    <nav style="display: flex; flex-direction: column; gap: 4px;">
+      <a class="nav-item active" data-page="dashboard" title="Sensor Telemetry and Charts">
+        <span class="nav-item__icon">📊</span>
+        <span class="nav-item__text">Dashboard</span>
+      </a>
+      <a class="nav-item" data-page="dataflow" title="Peripheral Pipeline Animation">
+        <span class="nav-item__icon">🔀</span>
+        <span class="nav-item__text">Data Flow</span>
+      </a>
+      <a class="nav-item" data-page="cpu" title="Fetch-Decode-Execute Pipeline">
+        <span class="nav-item__icon">⚡</span>
+        <span class="nav-item__text">CPU Pipeline</span>
+      </a>
+      <a class="nav-item" data-page="alu" title="ALU Interactive Workbench">
+        <span class="nav-item__icon">🧮</span>
+        <span class="nav-item__text">ALU Operations</span>
+      </a>
+      <a class="nav-item" data-page="registers" title="Register File Inspection">
+        <span class="nav-item__icon">📋</span>
+        <span class="nav-item__text">Registers</span>
+      </a>
+      <a class="nav-item" data-page="memory" title="64-Byte RAM Grid View">
+        <span class="nav-item__icon">💾</span>
+        <span class="nav-item__text">Memory</span>
+      </a>
+      <a class="nav-item" data-page="arch" title="Block Diagram & Bus Visualizer">
+        <span class="nav-item__icon">🏛️</span>
+        <span class="nav-item__text">Architecture & Buses</span>
+      </a>
+      <a class="nav-item" data-page="log" title="Real-Time Execution Telemetry">
+        <span class="nav-item__icon">💻</span>
+        <span class="nav-item__text">Execution Log</span>
+      </a>
+    </nav>
+
+    <!-- Lab Spec Card in Sidebar Footer -->
+    <div style="margin-top: auto; padding: 12px; border-radius: var(--radius-md); background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-muted); line-height: 1.6;">
+      <div style="color: var(--silver); font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent-cyan);"></span>
+        HARVARD ARCH LAB
+      </div>
+      <div>WORD SIZE: 8-Bit Data</div>
+      <div>ADDR BUS: 16-Bit Space</div>
+      <div>CLOCK: 1.25 Hz Sim</div>
+    </div>
+  </aside>
+
+  <!-- ======================================================================
+       MAIN CONTENT: Dynamic Views
+       ====================================================================== -->
+  <main class="app-content">
+
+    <!-- 1. DASHBOARD PAGE -->
+    <section id="page-dashboard" class="page-view active">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Live Sensor Telemetry</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Simulated physical sensor transducers with smooth random-walk noise and threshold alerts.
+          </p>
+        </div>
+        <div style="display: flex; gap: var(--space-sm); align-items: center;">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">SAMPLING:</span>
+          <span class="badge badge-neutral">800ms INTERVAL</span>
+        </div>
+      </div>
+
+      <!-- Sensor Cards Grid (Requirements 1, 10) -->
+      <div class="sensor-grid" id="sensor-cards-grid">
+        <!-- Dynamically populated by js/app.js -->
+      </div>
+
+      <!-- Realtime Canvas Charts & Alerts (Requirements 10, 18) -->
+      <div class="dashboard-bottom-grid">
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: var(--space-md);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="section-title" style="margin-bottom: 0;">Real-Time Transducer History</h2>
+            <span class="badge badge-neutral" style="font-family: var(--font-mono);">60-POINT ROLLING BUFFER</span>
+          </div>
+
+          <div class="charts-wrapper">
+            <div class="chart-container glass-card" style="padding: 12px;">
+              <canvas id="chart-temperature"></canvas>
+            </div>
+            <div class="chart-container glass-card" style="padding: 12px;">
+              <canvas id="chart-humidity"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Alerts Panel -->
+        <div class="glass-panel alerts-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="section-title" style="margin-bottom: 0;">System Alerts Log</h2>
+            <span id="alerts-count-badge" class="badge badge-neutral">0 ALERTS</span>
+          </div>
+          <div class="alerts-list" id="dashboard-alerts-list">
+            <div style="color: var(--text-muted); font-size: var(--font-size-xs); padding: 12px; text-align: center;">
+              All sensor readings within normal operating parameters.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DATA FLOW PAGE -->
+    <section id="page-dataflow" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Continuous Peripheral Data Flow</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Full hardware traversal: <code style="color: var(--accent-cyan);">SENSOR → I/O → CPU → REGISTERS → ALU → MEMORY → COMMUNICATION → DASHBOARD</code>
+          </p>
+        </div>
+        <button id="btn-spawn-packet" class="btn btn-sm btn-ghost" title="Inject simulated telemetry packet">
+          + INJECT PACKET
+        </button>
+      </div>
+
+      <div class="data-flow-container glass-panel">
+        <div class="data-flow-header-info">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="pulse-dot pulse-dot--active"></span>
+            <span style="font-size: var(--font-size-xs); font-family: var(--font-mono); color: var(--accent-cyan);">
+              ACTIVE BUS TRAVERSAL PIPELINE
+            </span>
+          </div>
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">
+            Click any subsystem node to inspect architectural role
+          </span>
+        </div>
+
+        <!-- SVG Container (Requirement 2) -->
+        <div id="dataflow-svg-container"></div>
+
+        <div class="flow-packet-detail-bar" id="dataflow-node-detail">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="badge badge-info" id="flow-detail-badge">PIPELINE ACTIVE</span>
+            <span id="flow-detail-text" style="color: var(--text-secondary);">
+              Transducer packets carrying live calibrated values traverse hardware stages.
+            </span>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--text-muted);" id="flow-detail-packet-tag">
+            SAMPLE: 28.6°C
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CPU PIPELINE PAGE -->
+    <section id="page-cpu" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">CPU Instruction Execution Pipeline</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Sequential 4-stage pipeline visualization with real-time stage glow and decoding explanations.
+          </p>
+        </div>
+        <button id="btn-run-instruction" class="btn btn-primary" title="Demonstrate complete 4-stage instruction cycle">
+          ⚡ RUN INSTRUCTION
+        </button>
+      </div>
+
+      <!-- CPU Telemetry Status -->
+      <div class="glass-card cpu-status-card">
+        <div>
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted); text-transform: uppercase;">ACTIVE STAGE</span>
+          <div id="cpu-active-stage-display" style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--accent-cyan); font-family: var(--font-mono);">
+            IDLE
+          </div>
+        </div>
+
+        <div style="border-left: 1px solid var(--glass-border); padding-left: var(--space-lg);">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted); text-transform: uppercase;">CURRENT STAGE ACTION</span>
+          <div id="cpu-stage-desc-display" style="font-size: var(--font-size-sm); color: var(--text-primary); margin-top: 4px;">
+            Waiting for CPU clock pulse or manual instruction trigger.
+          </div>
+        </div>
+
+        <div style="text-align: right; font-family: var(--font-mono);">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">RETIRED CYCLES</span>
+          <div id="cpu-cycle-count-display" style="font-size: var(--font-size-xl); font-weight: 700; color: var(--silver);">
+            0
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Stages Track (Requirements 3, 17) -->
+      <div class="pipeline-track" id="pipeline-stages-track">
+        <div class="pipeline-stage" data-stage="FETCH">
+          <div class="pipeline-stage__step">STAGE 01</div>
+          <div class="pipeline-stage__name">FETCH</div>
+          <div class="pipeline-stage__desc">Instruction retrieved from memory</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-stage" data-stage="DECODE">
+          <div class="pipeline-stage__step">STAGE 02</div>
+          <div class="pipeline-stage__name">DECODE</div>
+          <div class="pipeline-stage__desc">Control Unit interprets instruction</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-stage" data-stage="EXECUTE">
+          <div class="pipeline-stage__step">STAGE 03</div>
+          <div class="pipeline-stage__name">EXECUTE</div>
+          <div class="pipeline-stage__desc">ALU performs required operation</div>
+        </div>
+        <div class="pipeline-arrow">➔</div>
+
+        <div class="pipeline-stage" data-stage="STORE">
+          <div class="pipeline-stage__step">STAGE 04</div>
+          <div class="pipeline-stage__name">STORE</div>
+          <div class="pipeline-stage__desc">Result written to register/memory</div>
+        </div>
+      </div>
+
+      <!-- Instruction Details Box -->
+      <div class="cpu-current-instruction-box">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;">
+            INSTRUCTION REGISTER (IR)
+          </span>
+          <span class="badge badge-neutral" id="cpu-instruction-target">OPCODE DECODER ACTIVE</span>
+        </div>
+
+        <div class="instruction-display">
+          <span class="instruction-opcode" id="cpu-instruction-opcode">LOAD</span>
+          <span class="instruction-code" id="cpu-instruction-code">LOAD R1, [0x0028]</span>
+        </div>
+
+        <div id="cpu-instruction-explanation" style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 8px;">
+          Load live sensor reading from RAM address 0x0028 into general-purpose register R1.
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ALU OPERATIONS PAGE -->
+    <section id="page-alu" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Arithmetic Logic Unit (ALU)</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Interactive 8-bit computational core. Select an arithmetic or bitwise operation to inspect data processing.
+          </p>
+        </div>
+        <span class="badge badge-info" style="font-family: var(--font-mono);">8-BIT 2'S COMPLEMENT</span>
+      </div>
+
+      <div class="alu-workbench">
+        <!-- Operator Buttons (Requirement 6) -->
+        <div class="alu-op-buttons" id="alu-op-buttons-container">
+          <button class="alu-op-btn active" data-op="ADD">ADD (+)</button>
+          <button class="alu-op-btn" data-op="SUBTRACT">SUBTRACT (−)</button>
+          <button class="alu-op-btn" data-op="AND">AND (&amp;)</button>
+          <button class="alu-op-btn" data-op="OR">OR (|)</button>
+          <button class="alu-op-btn" data-op="XOR">XOR (⊕)</button>
+          <button class="alu-op-btn" data-op="NOT">NOT (~)</button>
+          <button class="alu-op-btn" data-op="COMPARE">COMPARE (≟)</button>
+        </div>
+
+        <!-- Interactive ALU Simulation Stage -->
+        <div class="alu-interactive-stage">
+          <!-- Operands Row -->
+          <div class="alu-operands-row">
+            <div class="operand-input-card glass-card">
+              <label for="alu-input-a">INPUT A</label>
+              <input type="number" id="alu-input-a" value="28" min="0" max="255">
+              <span id="alu-input-a-hex" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">0x1C</span>
+            </div>
+
+            <div class="alu-symbol-badge" id="alu-operator-symbol">+</div>
+
+            <div class="operand-input-card glass-card" id="alu-input-b-container">
+              <label for="alu-input-b">INPUT B</label>
+              <input type="number" id="alu-input-b" value="14" min="0" max="255">
+              <span id="alu-input-b-hex" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">0x0E</span>
+            </div>
+          </div>
+
+          <div style="color: var(--text-muted); font-size: 1.4rem;">↓</div>
+
+          <!-- ALU Processing Core -->
+          <div class="alu-center-core" id="alu-core-element">
+            <div class="alu-core-title">ALU ARITHMETIC CORE</div>
+            <div class="alu-core-status" id="alu-processing-text">READY FOR EXECUTION</div>
+          </div>
+
+          <div style="color: var(--text-muted); font-size: 1.4rem;">↓</div>
+
+          <!-- Result Card -->
+          <div class="alu-result-card glass-card">
+            <span style="font-size: var(--font-size-xs); text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em;">
+              COMPUTATION RESULT
+            </span>
+            <div class="alu-result-value" id="alu-result-display">42</div>
+            <div style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--text-secondary); display: flex; gap: 16px;">
+              <span>HEX: <strong id="alu-result-hex" style="color: var(--silver);">0x2A</strong></span>
+              <span>BIN: <strong id="alu-result-bin" style="color: var(--silver);">00101010</strong></span>
+            </div>
+
+            <!-- Condition Flags -->
+            <div class="alu-flags-row">
+              <span class="flag-badge" id="flag-z" title="Zero Flag: set when result is 0">Z: 0</span>
+              <span class="flag-badge" id="flag-n" title="Negative Flag: set when MSB is 1">N: 0</span>
+              <span class="flag-badge" id="flag-c" title="Carry Flag: set on unsigned arithmetic carry/borrow">C: 0</span>
+              <span class="flag-badge" id="flag-v" title="Overflow Flag: set on signed arithmetic overflow">V: 0</span>
+            </div>
+          </div>
+
+          <button id="btn-alu-execute" class="btn btn-primary btn-sm" style="margin-top: 8px;">
+            ▶ COMPUTE IN ALU
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. REGISTERS PAGE -->
+    <section id="page-registers" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">CPU Internal Register File</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            High-speed internal storage locations for operands, program counter, and condition codes.
+          </p>
+        </div>
+        <div style="font-size: var(--font-size-xs); color: var(--text-muted); font-family: var(--font-mono);">
+          ARCHITECTURE: 8 GENERAL + 3 SPECIAL
+        </div>
+      </div>
+
+      <!-- Registers Grid (Requirement 4) -->
+      <div class="register-grid" id="registers-grid-container">
+        <!-- Dynamically rendered by js/app.js -->
+      </div>
+    </section>
+
+    <!-- 6. MEMORY PAGE -->
+    <section id="page-memory" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Random Access Memory (RAM)</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            64-Byte static memory array with animated READ / WRITE data packet visualization.
+          </p>
+        </div>
+        <div style="display: flex; gap: var(--space-md); align-items: center;">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">RAM USAGE:</span>
+          <span class="badge badge-info" id="memory-usage-badge">24% USED</span>
+        </div>
+      </div>
+
+      <!-- Telemetry Strip (Requirement 5) -->
+      <div class="memory-telemetry-strip glass-card">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="color: var(--text-muted);">LAST BUS ACCESS:</span>
+          <div class="memory-action-pill" id="memory-last-access-pill">
+            <span id="mem-access-type" style="font-weight: 700;">IDLE</span>
+            <span id="mem-access-detail" style="color: var(--silver);">No memory access cycles</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; font-size: var(--font-size-xs);">
+          <span style="color: var(--success);">● READ CYCLES</span>
+          <span style="color: var(--warning);">● WRITE CYCLES</span>
+        </div>
+      </div>
+
+      <!-- 64-Cell Grid -->
+      <div class="memory-grid-wrapper glass-panel">
+        <div class="memory-grid" id="memory-cells-grid">
+          <!-- Dynamically populated by js/app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. SYSTEM ARCHITECTURE & BUSES PAGE -->
+    <section id="page-arch" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">System Architecture &amp; Bus Topology</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Click any block or bus to inspect hardware interconnections, control signals, and data flow paths.
+          </p>
+        </div>
+        <span class="badge badge-neutral" style="font-family: var(--font-mono);">COA VON NEUMANN / HARVARD</span>
+      </div>
+
+      <div class="arch-container">
+        <!-- Interactive Block Schematic (Requirement 15) -->
+        <div class="arch-schematic">
+          <div class="arch-blocks-row">
+            <!-- CPU Composite Block -->
+            <div class="arch-cpu-box" id="arch-block-cpu">
+              <div class="arch-cpu-header">CENTRAL PROCESSING UNIT (CPU)</div>
+              <div class="arch-cpu-subnodes">
+                <div class="arch-node" data-comp="registers" id="arch-comp-registers">
+                  <span class="arch-node__icon">📋</span>
+                  <span class="arch-node__label">REGISTERS</span>
+                  <span class="arch-node__sub">R0-R7, PC, SP</span>
+                </div>
+                <div class="arch-node" data-comp="alu" id="arch-comp-alu">
+                  <span class="arch-node__icon">🧮</span>
+                  <span class="arch-node__label">ALU</span>
+                  <span class="arch-node__sub">Arithmetic Core</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Memory Block -->
+            <div class="arch-node" data-comp="memory" id="arch-comp-memory" style="flex: 1;">
+              <span class="arch-node__icon">💾</span>
+              <span class="arch-node__label">SYSTEM MEMORY</span>
+              <span class="arch-node__sub">SRAM Data &amp; Instructions</span>
+            </div>
+
+            <!-- I/O Interface Block -->
+            <div class="arch-node" data-comp="io" id="arch-comp-io" style="flex: 1;">
+              <span class="arch-node__icon">📡</span>
+              <span class="arch-node__label">I/O CONTROLLER</span>
+              <span class="arch-node__sub">ADC &amp; Transducers</span>
+            </div>
+          </div>
+
+          <!-- Bus Visualizer Strip (Requirement 16) -->
+          <div class="arch-buses-block">
+            <div style="font-size: var(--font-size-xs); font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>SYSTEM INTERCONNECT BUSES (CLICK TO INSPECT)</span>
+              <span style="color: var(--accent-cyan);">ACTIVE TELEMETRY FLOW</span>
+            </div>
+            <div id="bus-visualizer-container"></div>
+          </div>
+        </div>
+
+        <!-- Architectural Inspector Panel -->
+        <div class="arch-info-card glass-panel" id="arch-inspector-panel">
+          <div class="arch-info-title" id="arch-info-title">System Architecture Overview</div>
+          <div class="arch-info-body" id="arch-info-desc">
+            SENSECORE models a modern microcontroller architecture integrating an 8-bit Harvard CPU core, an arithmetic unit, internal register array, unified static RAM, and synchronized peripheral buses.
+          </div>
+          <div class="arch-info-specs" id="arch-info-specs">
+            <div>DATA PATH: 8-bit parallel bus</div>
+            <div>ADDRESS SPACE: 16-bit address decoding</div>
+            <div>CONTROL LINES: Read, Write, Clock, IRQ</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. EXECUTION LOG PAGE -->
+    <section id="page-log" class="page-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Hardware Execution Telemetry</h1>
+          <p style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 4px;">
+            Real-time terminal log recording instruction cycles, bus transfers, and sensor events.
+          </p>
+        </div>
+        <button id="btn-clear-log" class="btn btn-sm btn-ghost">
+          CLEAR TERMINAL
+        </button>
+      </div>
+
+      <div class="log-page-container">
+        <!-- Filter Toolbar -->
+        <div class="log-toolbar">
+          <div class="log-filters" id="log-filter-buttons">
+            <button class="log-filter-btn active" data-cat="all">ALL EVENTS</button>
+            <button class="log-filter-btn" data-cat="cpu">CPU</button>
+            <button class="log-filter-btn" data-cat="memory">MEMORY</button>
+            <button class="log-filter-btn" data-cat="io">I/O</button>
+            <button class="log-filter-btn" data-cat="alu">ALU</button>
+            <button class="log-filter-btn" data-cat="alert">ALERTS</button>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--text-muted);" id="log-counter">
+            0 ENTRIES
+          </span>
+        </div>
+
+        <!-- Live Terminal Stream (Requirement 12) -->
+        <div class="exec-log-view" id="exec-log-terminal">
+          <!-- Dynamically populated by js/app.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Application Entry Script (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

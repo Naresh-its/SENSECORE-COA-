@@ -1,0 +1,166 @@
+/* SENSECORE Animations & Micro-Interactions */
+
+/* Breathing pulse for LIVE indicator */
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.96); }
+}
+.live-badge { 
+  animation: breathe 2.8s ease-in-out infinite; 
+}
+
+/* Pulse dot beside sensors */
+@keyframes pulse-dot {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.pulse-dot { 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  position: relative; 
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.pulse-dot::after { 
+  content: ''; 
+  position: absolute; 
+  inset: 0; 
+  border-radius: 50%; 
+  animation: pulse-dot 2s cubic-bezier(0.24, 0, 0.38, 1) infinite; 
+}
+
+.pulse-dot--active { background: var(--success); }
+.pulse-dot--active::after { background: var(--success); }
+.pulse-dot--warning { background: var(--warning); }
+.pulse-dot--warning::after { background: var(--warning); }
+.pulse-dot--danger { background: var(--danger); }
+.pulse-dot--danger::after { background: var(--danger); }
+.pulse-dot--idle { background: var(--silver-dim); }
+.pulse-dot--idle::after { display: none; }
+
+/* Value highlight flash (triggered on significant sensor change) */
+@keyframes highlight-flash {
+  0% { background-color: var(--accent-cyan-subtle); border-radius: var(--radius-sm); }
+  100% { background-color: transparent; }
+}
+.value-highlight, .highlight-flash { 
+  animation: highlight-flash 600ms ease-out; 
+}
+
+/* CPU stage glow */
+@keyframes stage-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--accent-cyan-rgb), 0.25); }
+  50% { box-shadow: 0 0 22px rgba(var(--accent-cyan-rgb), 0.55); }
+}
+.stage-active { 
+  animation: stage-glow 2s ease-in-out infinite; 
+  border-color: var(--accent-cyan) !important; 
+}
+
+/* Data packet animation along SVG path */
+@keyframes flow-packet {
+  from { offset-distance: 0%; opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  to { offset-distance: 100%; opacity: 0; }
+}
+
+.data-packet {
+  position: absolute;
+  width: 8px; 
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+  animation: flow-packet 3s linear forwards;
+}
+
+/* Register update notification badge */
+@keyframes reg-update {
+  0% { transform: translateY(6px); opacity: 0; }
+  20% { transform: translateY(0); opacity: 1; }
+  80% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-6px); opacity: 0; }
+}
+.reg-update-badge { 
+  animation: reg-update 1.2s ease forwards; 
+}
+
+/* Memory access pulse */
+@keyframes mem-access {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.mem-read { 
+  animation: mem-access 500ms ease; 
+  border-color: var(--success) !important; 
+}
+.mem-write { 
+  animation: mem-access 500ms ease; 
+  border-color: var(--warning) !important; 
+}
+
+/* Page slide & fade transition */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter { 
+  animation: page-enter 240ms ease-out; 
+}
+
+/* Log entry append */
+@keyframes log-append {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.log-entry-new { 
+  animation: log-append 200ms ease-out; 
+}
+
+/* Subtle danger pulse for critical sensor cards */
+@keyframes pulse-danger {
+  0%, 100% { border-left-color: rgba(var(--danger-rgb), 0.6); box-shadow: 0 0 10px rgba(var(--danger-rgb), 0.1); }
+  50% { border-left-color: rgba(var(--danger-rgb), 1); box-shadow: 0 0 20px rgba(var(--danger-rgb), 0.3); }
+}
+
+/* ALU processing animation */
+@keyframes alu-process {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+.alu-processing { 
+  animation: alu-process 1s infinite ease-in-out; 
+}
+
+/* Bus data movement */
+@keyframes bus-flow {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+.bus-flow-active .bus-line__data {
+  animation: bus-flow 2s linear infinite;
+}
+
+/* Micro-interaction button ripple / press */
+.btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* Prefers-reduced-motion: Accessible calm static state */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .data-packet { display: none !important; }
+  .pulse-dot::after { display: none !important; }
+  .live-badge { animation: none !important; opacity: 1 !important; }
+}
