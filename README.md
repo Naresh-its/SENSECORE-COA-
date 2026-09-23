@@ -29,8 +29,8 @@ SENSECORE models a complete 8-bit Harvard microcontroller architecture with unif
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Naresh-its/COA-PROJECT-SENSECORE.git
-   cd COA-PROJECT-SENSECORE
+   git clone https://github.com/Naresh-its/SENSECORE-COA-.git
+   cd SENSECORE-COA-
    ```
 
 2. **Start the local server:**
@@ -56,32 +56,16 @@ node test_simulator.js
 ## 📂 Project Structure
 
 ```
-COA-PROJECT-SENSECORE/
-├── index.html              # Main application shell & view templates
+SENSECORE-COA-/
+├── index.html              # Standalone single-file application
+├── style.css               # Complete stylesheet bundle
+├── app.bundle.js           # Complete subsystem controller bundle
 ├── server.js               # Zero-dependency local static HTTP server
 ├── test_simulator.js       # Automated subsystem verification suite
 ├── favicon.svg             # Microchip vector icon
-├── css/
-│   ├── variables.css       # Design tokens & color variables
-│   ├── base.css            # Typography & reset
-│   ├── glass.css           # Glassmorphism panels & backdrop filters
-│   ├── layout.css          # Topbar & sidebar grid layout
-│   ├── animations.css      # Keyframes, glow effects & pulse states
-│   ├── components.css      # Buttons, badges & cards
-│   └── pages.css           # Page-specific styling for all 8 views
-└── js/
-    ├── app.js              # Central application controller & router
-    ├── simulation.js       # Master clock loop & state machine
-    ├── sensors.js          # Transducer physics & threshold alerts
-    ├── cpu.js              # 4-stage CPU pipeline & instruction stepper
-    ├── alu.js              # 8-bit arithmetic & logic engine
-    ├── registers.js        # Internal fast register array
-    ├── memory.js           # 64-Byte static RAM model
-    ├── dataflow.js         # Serpentine packet animation engine
-    ├── bus.js              # Address/Data/Control bus visualizer
-    ├── charts.js           # Lightweight real-time canvas chart engine
-    ├── logger.js           # Terminal execution telemetry stream
-    └── utils.js            # Interpolation, formatting & event emitter
+├── package.json            # Project manifest
+├── css/                    # Modular source CSS
+└── js/                     # Modular source ES modules
 ```
 
 ---
