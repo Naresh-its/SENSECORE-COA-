@@ -4,6 +4,9 @@
   grid-template-rows: var(--topbar-height) 1fr;
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .app-topbar {
@@ -12,49 +15,55 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-lg);
+  padding: 0 var(--space-xl);
   z-index: 100;
 }
 
 .app-sidebar {
   grid-column: 1;
   grid-row: 2;
-  padding: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  z-index: 20;
 }
 
 .app-content {
   grid-column: 2;
   grid-row: 2;
-  padding: var(--space-xl);
+  padding: var(--space-xl) var(--space-2xl);
   overflow-y: auto;
   position: relative;
+  z-index: 10;
 }
 
 .page-view {
   display: none;
   opacity: 0;
-  transition: opacity var(--transition-normal);
+  transform: translateY(8px);
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+  padding-bottom: var(--space-2xl);
 }
 
 .page-view.active {
   display: block;
   opacity: 1;
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .page-view {
     transition: none;
+    transform: none;
   }
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .app-layout {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 68px 1fr;
   }
 
   .app-sidebar .nav-item__text {
@@ -63,6 +72,11 @@
 
   .app-sidebar .nav-item {
     justify-content: center;
-    padding: 10px;
+    padding: 12px;
+  }
+  
+  .sys-monitor {
+    gap: var(--space-md);
+    padding: 4px 12px;
   }
 }
