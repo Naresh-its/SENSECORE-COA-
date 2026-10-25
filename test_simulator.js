@@ -1,12 +1,13 @@
-// Automated verification script for SENSECORE Subsystems
-import { SimulationEngine } from './js/simulation.js';
-import { SensorManager } from './js/sensors.js';
-import { CPUPipeline } from './js/cpu.js';
-import { ALU } from './js/alu.js';
-import { RegisterFile } from './js/registers.js';
-import { Memory } from './js/memory.js';
-import { BusVisualizer } from './js/bus.js';
-import { Logger } from './js/logger.js';
+// ==========================================================================
+// SENSECORE - COA LAB SYLLABUS AUTOMATED VERIFICATION SUITE
+// Tests all 5 units for mathematical and architectural accuracy
+// ==========================================================================
+
+import { Unit1 } from './js/unit1.js';
+import { Unit2 } from './js/unit2.js';
+import { Unit3 } from './js/unit3.js';
+import { Unit4 } from './js/unit4.js';
+import { Unit5 } from './js/unit5.js';
 
 let passed = 0;
 let failed = 0;
@@ -21,116 +22,164 @@ function assert(condition, message) {
   }
 }
 
-console.log('=== SENSECORE SUBSYSTEM AUTOMATED TEST SUITE ===\n');
+console.log('=== SENSECORE COA SYLLABUS COMPREHENSIVE TEST SUITE ===\n');
 
-// 1. Test Simulation Engine Lifecycle
-console.log('1. Testing Simulation Engine Lifecycle:');
-const engine = new SimulationEngine();
-assert(engine.getState() === 'READY', 'Initial state is READY');
+// --------------------------------------------------------------------------
+// UNIT 1 TESTS
+// --------------------------------------------------------------------------
+console.log('1. UNIT 1 — Number Systems, Codes, Arithmetic & Logic Gates:');
 
-engine.start();
-assert(engine.getState() === 'RUNNING', 'State transitions to RUNNING on start()');
+// Number conversions
+const conv = Unit1.convertNumber('42', 10);
+assert(conv.binary === '00101010', 'Decimal 42 converts to binary 00101010');
+assert(conv.hex === '2A', 'Decimal 42 converts to hex 2A');
+assert(conv.octal === '52', 'Decimal 42 converts to octal 52');
 
-engine.pause();
-assert(engine.getState() === 'PAUSED', 'State transitions to PAUSED on pause()');
+// Gray Code
+const gray = Unit1.binaryToGray('1011');
+assert(gray === '1110', 'Binary 1011 converts to Gray 1110');
+assert(Unit1.grayToBinary('1110') === '1011', 'Gray 1110 converts back to Binary 1011');
 
-engine.resume();
-assert(engine.getState() === 'RUNNING', 'State transitions to RUNNING on resume()');
+// BCD & Excess-3
+const bcd = Unit1.decimalToBCD(25);
+assert(bcd.rawBCD === '0010 0101', 'Decimal 25 converts to BCD 0010 0101');
+const xs3 = Unit1.decimalToExcess3(25);
+assert(xs3.rawExcess3 === '0101 1000', 'Decimal 25 converts to Excess-3 0101 1000');
 
-engine.reset();
-assert(engine.getState() === 'READY', 'State transitions to READY on reset()');
+// ASCII
+const ascii = Unit1.charToASCII('A');
+assert(ascii.decimal === 65 && ascii.hex === '0x41', 'ASCII "A" is decimal 65 / hex 0x41');
 
-// 2. Test Sensor Manager & Thresholds
-console.log('\n2. Testing Sensor Manager & Realistic Generation:');
-const sensors = new SensorManager(engine);
-engine.registerModule(sensors);
-const tempSensor = sensors.getSensor('temperature');
-assert(tempSensor !== undefined, 'Temperature sensor registered');
-assert(tempSensor.value === 28.6, `Default temperature is 28.6°C (got ${tempSensor.value})`);
-assert(tempSensor.status === 'NORMAL', 'Initial status is NORMAL');
+// Parity
+const parity = Unit1.generateParity('1101001', 'even');
+assert(parity.parityBit === 0, 'Even parity for 1101001 (4 ones) has parity bit 0');
+const parityCheck = Unit1.checkParity('11010010', 'even');
+assert(parityCheck.isClean === true, 'Even parity check passes for 11010010');
+const parityCheckErr = Unit1.checkParity('11010011', 'even');
+assert(parityCheckErr.isClean === false, 'Even parity check catches corrupted bit in 11010011');
 
-// Run 5 ticks
-for (let i = 0; i < 5; i++) {
-  sensors.tick();
-}
-assert(tempSensor.history.length === 6, `History rolling buffer updated (len: ${tempSensor.history.length})`);
-assert(tempSensor.value >= tempSensor.min && tempSensor.value <= tempSensor.max, `Value within bounds [${tempSensor.min}, ${tempSensor.max}] (got ${tempSensor.value})`);
+// 2's Complement & Signed Arithmetic
+const tc = Unit1.toTwosComplement(-42);
+assert(tc.binary === '11010110' && tc.hex === '0xD6', '-42 in 8-bit 2\'s complement is 11010110 (0xD6)');
+const addRes = Unit1.binaryArithmetic(25, 17, 'ADD');
+assert(addRes.result === 42, 'Binary addition: 25 + 17 = 42');
 
-// 3. Test Register File
-console.log('\n3. Testing Register File:');
-const registers = new RegisterFile(engine);
-assert(registers.get('PC') === 0x10, 'Initial PC is 0x10');
-assert(registers.get('SP') === 0xFF, 'Initial SP is 0xFF');
+// BCD Addition
+const bcdAdd = Unit1.bcdAddition(7, 8);
+assert(bcdAdd.needsCorrection === true && bcdAdd.carryOut === 1 && bcdAdd.correctedNibble === '0101', 'BCD Addition 7 + 8 corrects with +6 to produce 15 (0101 with carry 1)');
 
-let registerUpdateEvent = null;
-engine.on('register-update', (data) => { registerUpdateEvent = data; });
-registers.set('R1', 42);
-assert(registers.get('R1') === 42, 'R1 updated to 42');
-assert(registerUpdateEvent !== null && registerUpdateEvent.register === 'R1' && registerUpdateEvent.newValue === 42, 'register-update event emitted with correct payload');
+// Logic Gates
+assert(Unit1.evaluateGate('NAND', 1, 1).output === 0, 'NAND(1, 1) = 0');
+assert(Unit1.evaluateGate('XOR', 1, 0).output === 1, 'XOR(1, 0) = 1');
+assert(Unit1.evaluateGate('XNOR', 0, 0).output === 1, 'XNOR(0, 0) = 1');
 
-// 4. Test Memory Subsystem
-console.log('\n4. Testing Memory Subsystem (64 Bytes):');
-const memory = new Memory(engine, 64);
-assert(memory.size === 64, 'Memory initialized with 64 bytes');
-assert(memory.getUsage() > 0, `Initial memory usage tracked (${memory.getUsage()}%)`);
+// --------------------------------------------------------------------------
+// UNIT 2 TESTS
+// --------------------------------------------------------------------------
+console.log('\n2. UNIT 2 — Architectures, Buses, Addressing & 8086:');
 
-let memEvent = null;
-engine.on('memory-access', (data) => { memEvent = data; });
-memory.write(0x0028, 99);
-assert(memory.read(0x0028) === 99, 'Memory write/read verified at 0x0028');
-assert(memEvent !== null && memEvent.type === 'READ' && memEvent.value === 99, 'memory-access event emitted');
+// Bus Transaction
+const busRead = Unit2.simulateBusTransaction('READ', 0x0040, 0xAB);
+assert(busRead.addressBus.value === '0x0040', 'Bus read asserts MAR 0x0040 on Address Bus');
+assert(busRead.controlBus.readLine === true, 'Control bus asserts MEMR signal');
 
-// 5. Test ALU Operations & Flags
-console.log('\n5. Testing ALU Operations & Flag Evaluation:');
-const alu = new ALU(engine);
+// Addressing Modes
+const immMode = Unit2.addressingModes.find(m => m.id === 'imm').calculate(42);
+assert(immMode.value === 42, 'Immediate addressing returns literal operand 42');
+const indexedMode = Unit2.addressingModes.find(m => m.id === 'indexed').calculate(8, null, { R2: 0x0020 });
+assert(indexedMode.ea === '0x0028', 'Indexed mode calculates EA = [R2] + 8 = 0x0028');
 
-// ADD
-const addRes = alu.execute('ADD', 28, 14);
-assert(addRes.result === 42, `28 + 14 = 42 (got ${addRes.result})`);
-assert(!addRes.flags.zero && !addRes.flags.negative && !addRes.flags.carry, 'ADD flags valid');
+// 8086 Physical Address
+const addr8086 = Unit2.calculate8086Address('1234', '0056');
+assert(addr8086.physicalAddress === '0x12396', '8086 physical address for CS:1234h, IP:0056h is 12396h');
 
-// SUB
-const subRes = alu.execute('SUBTRACT', 42, 42);
-assert(subRes.result === 0, `42 - 42 = 0 (got ${subRes.result})`);
-assert(subRes.flags.zero === true, 'Zero flag (Z) set on 0 result');
+// --------------------------------------------------------------------------
+// UNIT 3 TESTS
+// --------------------------------------------------------------------------
+console.log('\n3. UNIT 3 — Arithmetic: De Morgan, CLA, CSA, Booth, Division & IEEE 754:');
 
-// NOT
-const notRes = alu.execute('NOT', 0x00);
-assert(notRes.result === 0xFF, `NOT ~0x00 = 0xFF (got 0x${notRes.result.toString(16)})`);
-assert(notRes.flags.negative === true, 'Negative flag (N) set on MSB=1');
+// De Morgan's Theorem
+const dm = Unit3.verifyDeMorgan(1, 0);
+assert(dm.t1.verified && dm.t2.verified, 'De Morgan theorems hold for inputs (1, 0)');
 
-// COMPARE
-const cmpRes = alu.execute('COMPARE', 50, 50);
-assert(cmpRes.flags.zero === true, 'COMPARE 50 == 50 sets Zero flag');
+// CLA (Carry Lookahead Adder)
+const cla = Unit3.carryLookaheadAdder(5, 7, 0); // 5 + 7 = 12
+assert(cla.sumVal === 12 && cla.cout === 0, '4-bit CLA computes 5 + 7 = 12');
 
-// 6. Test CPU Pipeline
-console.log('\n6. Testing CPU 4-Stage Pipeline:');
-const cpu = new CPUPipeline(engine);
-assert(cpu.currentStage === 'IDLE', 'CPU starts in IDLE');
+// CSA (Carry-Save Adder)
+const csa = Unit3.carrySaveAdder(3, 4, 5); // 3 + 4 + 5 = 12
+assert(csa.finalTotal === 12, 'CSA reduces 3 summands (3, 4, 5) to 12');
 
-let stagesEncountered = [];
-engine.on('cpu-stage', (data) => {
-  stagesEncountered.push(data.stage);
-});
+// Multipliers
+const mulUnsigned = Unit3.unsignedMultiplier(6, 7);
+assert(mulUnsigned.product === 42, 'Unsigned multiplier: 6 × 7 = 42');
+const booth = Unit3.boothMultiplier(-3, 5);
+assert(booth.signedProduct === -15, 'Booth algorithm signed multiplier: -3 × 5 = -15');
 
-// Run single instruction
-await cpu.runInstruction(20);
-assert(stagesEncountered.includes('FETCH'), 'FETCH stage executed');
-assert(stagesEncountered.includes('DECODE'), 'DECODE stage executed');
-assert(stagesEncountered.includes('EXECUTE'), 'EXECUTE stage executed');
-assert(stagesEncountered.includes('STORE'), 'STORE stage executed');
-assert(cpu.cycleCount === 1, `Cycle count incremented to 1 (got ${cpu.cycleCount})`);
+// Division
+const restDiv = Unit3.restoringDivision(13, 3);
+assert(restDiv.quotient === 4 && restDiv.remainder === 1, 'Restoring division: 13 ÷ 3 = Q:4, R:1');
+const nonRestDiv = Unit3.nonRestoringDivision(14, 4);
+assert(nonRestDiv.quotient === 3 && nonRestDiv.remainder === 2, 'Non-restoring division: 14 ÷ 4 = Q:3, R:2');
 
-// 7. Test Logger
-console.log('\n7. Testing Execution Logger:');
-const logger = new Logger(50);
-logger.log('Sensor interrupt generated', 'io');
-logger.log('Pipeline fetch cycle 0x0010', 'cpu');
-assert(logger.getEntries().length === 2, '2 entries logged');
-assert(logger.getEntries()[0].category === 'io', 'Category preserved');
+// IEEE 754 Floating Point
+const floatConv = Unit3.decimalToIEEE754(-12.625);
+assert(floatConv.signBit === '1', '-12.625 sign bit is 1 (negative)');
+assert(floatConv.unbiasedExponent === 3, '-12.625 unbiased exponent is 3 (2^3 = 8)');
 
-console.log(`\n========================================`);
+// --------------------------------------------------------------------------
+// UNIT 4 TESTS
+// --------------------------------------------------------------------------
+console.log('\n4. UNIT 4 — Basic Processing Unit, Control Unit & Pipelining:');
+
+// T-states
+const steps = Unit4.getInstructionExecutionSteps();
+assert(steps.length === 6 && steps[0].step === 'T1', 'Instruction execution has 6 micro-operation T-states');
+
+// Branch Evaluation
+const branch = Unit4.evaluateBranch('CONDITIONAL', true, 0x1000, 4);
+assert(branch.branchTaken === true && branch.pipelinePenalty === 2, 'Taken branch imposes 2-cycle pipeline penalty');
+
+// Pipeline Performance
+const pipePerf = Unit4.calculatePipelinePerformance(100, 5, 2);
+assert(parseFloat(pipePerf.speedup) > 4.5, '100 instructions on 5-stage pipeline yields speedup > 4.5');
+
+// ARM Case Study
+const arm = Unit4.getARMCaseStudy();
+assert(arm.pipeline.stages === 3, 'ARM7 case study specifies 3-stage pipeline');
+assert(arm.registers.total === 37, 'ARM architecture specifies 37 physical registers');
+
+// --------------------------------------------------------------------------
+// UNIT 5 TESTS
+// --------------------------------------------------------------------------
+console.log('\n5. UNIT 5 — Parallelism, Flynn, Thumb & I/O:');
+
+// Amdahl's Law
+const amdahl = Unit5.calculateAmdahlsLaw(0.75, 4);
+assert(parseFloat(amdahl.speedup) === 2.29, 'Amdahl speedup for 75% parallel on 4 cores is ~2.29');
+
+// Flynn's Classification
+assert(Unit5.flynnsClassifications.MIMD.instructionStreams === 'Multiple', 'MIMD has Multiple Instruction Streams');
+assert(Unit5.flynnsClassifications.SIMD.dataStreams === 'Multiple (Array)', 'SIMD has Multiple Data Streams');
+
+// Multi-Core Workload
+const multiCore = Unit5.simulateMultiCoreWorkload(12, 4);
+assert(multiCore.cores.length === 4, '4 cores allocated in multi-core simulation');
+
+// Load/Store
+const ldr = Unit5.simulateLoadStore('LDR', '0x0020', 8);
+assert(ldr.effectiveAddress === '0x0028', 'LDR R1, [R2, #8] calculates EA = 0x0028');
+
+// Thumb instruction set
+const thumb = Unit5.getThumbInstructionDetails();
+assert(thumb.comparison[0].thumb === '16 bits', 'Thumb instruction length is 16 bits');
+
+// I/O Techniques
+const ioOps = Unit5.getIOOperations();
+assert(ioOps.techniques.length === 3, '3 I/O techniques modeled: Polling, Interrupt, DMA');
+
+console.log('\n========================================');
 console.log(`RESULTS: ${passed} PASSED, ${failed} FAILED`);
-console.log(`========================================\n`);
+console.log('========================================');
 
 if (failed > 0) process.exit(1);
